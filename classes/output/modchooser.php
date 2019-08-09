@@ -56,6 +56,7 @@ class modchooser extends chooser {
      * @param stdClass[] $modules The modules.
      */
     public function __construct(stdClass $course, array $modules) {
+        global $DB;
         $this->course = $course;
 
         $sections = [];
@@ -64,23 +65,34 @@ class modchooser extends chooser {
         $activities = array_filter($modules, function($mod) {
             return ($mod->archetype !== MOD_ARCHETYPE_RESOURCE && $mod->archetype !== MOD_ARCHETYPE_SYSTEM);
         });
+        
+        //Only perform for courses not at site level
+        if ($course->category) {
+            //We have to iterate through all categories because this could be a sub category
+            $category = $DB->get_record('course_categories', ['id' => $course->category]);
+            //Convert path into array, remove empty values and reverse
+            $categoryPath = array_reverse(array_filter(explode('/', $category->path)));
+            //Find modules that must be removed.
+            $categoryModules = [];
+            //First category to have plugins blocked overrides parent category
+            foreach ($categoryPath as $key => $categoryId) {
+                $params = [
+                    'categoryid' => $categoryId,
+                    'plugintype' => 'mod'
+                ];
 
-        /**
-         * If the user does not have access_theme, they cannot see the modules
-         * based on the unaccesible modules settings in the theme
-         */
-//        if (!has_capability('theme/boostplus:access_theme', $context)) {
-//            //Get theme settings
-//            $theme = \theme_config::load('boostplus');
-//            $unaccessible_mods = explode("\n", $theme->settings->unaccessible_mods);
-//            //unset all activities
-//            foreach ($unaccessible_mods as $key => $umod) {
-//                unset($activities[trim($umod)]);
-//            }
-//        }
-        
-         unset($activities["assign"]);
-        
+                if ($blockedModules = $DB->get_records('tool_catadmin_categoryplugin', $params)) {
+                    break;
+                }
+            }
+            //Remove blocked modules
+            if ($blockedModules) {
+                foreach ($blockedModules as $bm) {
+                    unset($activities[trim($bm->pluginname)]);
+                }
+            }
+        }
+
         if (count($activities)) {
             $sections[] = new chooser_section('activities', new lang_string('activities'),
                     array_map(function($module) use ($context) {

@@ -5,7 +5,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
+// Call the theme lib file.
+require_once(__DIR__ . '/lib.php');
  
 // Every file should have GPL and copyright in the header - we skip it in tutorials but you should not skip it for real.
  
@@ -53,3 +54,99 @@ $THEME->requiredblocks = '';
 // This is a feature that tells the blocks library not to use the "Add a block" block. We don't want this in boost based themes because
 // it forces a block region into the page when editing is enabled and it takes up too much room.
 $THEME->addblockposition = BLOCK_ADDBLOCK_POSITION_FLATNAV;
+// This setting defines the main scss file for our theme to be compiled. We could set it to a static file in the scss folder or to a function which returns the SCSS based on theme settings.
+$THEME->scss = function($theme) {
+ 
+    // We need to load the config for our parent theme because that is where the preset setting is defined.
+    $parentconfig = theme_config::load('boost');
+    // Call a function from our parent themes lib.php file to fetch the content of the themes main SCSS file based on it's own config, not ours.
+    return theme_boost_get_main_scss_content($parentconfig);
+};
+$THEME->prescsscallback = 'theme_boostplus_get_pre_scss';
+// This is a function that returns some SCSS as a string to prepend to the main SCSS file.                                          
+$THEME->extrascsscallback = 'theme_boostplus_get_extra_scss';
+
+$THEME->layouts = [
+    // Most backwards compatible layout without the blocks - this is the layout used by default.
+    'base' => array(
+        'file' => 'columns2.php',
+        'regions' => array(),
+    ),
+    // Standard layout with blocks, this is recommended for most pages with general information.
+    'standard' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+    ),
+    // Main course page.
+    'course' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+        'options' => array('langmenu' => true),
+    ),
+    'coursecategory' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+    ),
+    // Part of course, typical for modules - default page layout if $cm specified in require_login().
+    'incourse' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+    ),
+    // The site home page.
+    'frontpage' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+        'options' => array('nonavbar' => true),
+    ),
+    // Server administration scripts.
+    'admin' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+    ),
+    // My dashboard page.
+    'mydashboard' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+        'options' => array('nonavbar' => true, 'langmenu' => true, 'nocontextheader' => true),
+    ),
+    // My public page.
+    'mypublic' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+    ),
+ 
+    // Pages that appear in pop-up windows - no navigation, no blocks, no header.
+    'popup' => array(
+        'file' => 'columns1.php',
+        'regions' => array(),
+        'options' => array('nofooter' => true, 'nonavbar' => true),
+    ),
+    // No blocks and minimal footer - used for legacy frame layouts only!
+    'frametop' => array(
+        'file' => 'columns1.php',
+        'regions' => array(),
+        'options' => array('nofooter' => true, 'nocoursefooter' => true),
+    ),
+
+    // Should display the content and basic headers only.
+    'print' => array(
+        'file' => 'columns1.php',
+        'regions' => array(),
+        'options' => array('nofooter' => true, 'nonavbar' => false),
+    ),
+
+    // The pagelayout used for reports.
+    'report' => array(
+        'file' => 'columns2.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+    ),
+];
